@@ -1,12 +1,8 @@
 package sd2021.aula1;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.MulticastSocket;
-import java.net.NetworkInterface;
-import java.net.URI;
+import java.net.*;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -33,7 +29,7 @@ public class Discovery {
 	
 	// The pre-aggreed multicast endpoint assigned to perform discovery. 
 	static final InetSocketAddress DISCOVERY_ADDR = new InetSocketAddress("226.226.226.226", 2266);
-	static final int DISCOVERY_PERIOD = 1000;
+	static final int DISCOVERY_PERIOD = 5000;
 	static final int DISCOVERY_TIMEOUT = 5000;
 
 	// Used separate the two fields that make up a service announcement.
@@ -42,6 +38,8 @@ public class Discovery {
 	private InetSocketAddress addr;
 	private String serviceName;
 	private String serviceURI;
+	private Map<String, Set<URI>> servers;
+	private Map<String, Long> timeStamps;
 
 	/**
 	 * @param  serviceName the name of the service to announce
@@ -51,6 +49,8 @@ public class Discovery {
 		this.addr = addr;
 		this.serviceName = serviceName;
 		this.serviceURI  = serviceURI;
+		this.servers = new HashMap<String, Set<URI>>();
+		this.timeStamps = new HashMap<String, Long>();
 	}
 	
 	/**
@@ -91,7 +91,24 @@ public class Discovery {
 							System.out.printf( "FROM %s (%s) : %s\n", pkt.getAddress().getCanonicalHostName(), 
 									pkt.getAddress().getHostAddress(), msg);
 							//TODO: to complete by recording the received information from the other node.
+							String sn = msgElems[0], su = msgElems[1];
+
+							if (!servers.containsKey(sn))
+								servers.put(sn, new HashSet<URI>());
+
+							servers.get(sn).add(URI.create(su));
+							timeStamps.put(sn, System.currentTimeMillis());
+
+							//TESTES
+
+							System.out.println("URIS conhecidos de " + sn);
+							URI[] uris = knownUrisOf(sn);
+							for (int i = 0; i < uris.length; i++)
+								System.out.println(uris[i].toString());
+							System.out.println("Last timestamp: " + timeStamps.get(sn));
+
 						}
+
 					} catch (IOException e) {
 						// do nothing
 					}
@@ -110,8 +127,18 @@ public class Discovery {
 	 * 
 	 */
 	public URI[] knownUrisOf(String serviceName) {
-		//TODO: You have to implement this!!
-		throw new Error("Not Implemented...");
+		Set<URI> s = servers.get(serviceName);
+		Iterator<URI> it = s.iterator();
+		URI[] uris = new URI[s.size()];
+		int counter = 0;
+
+		while (it.hasNext()) {
+			URI uri = it.next();
+			uris[counter++] = uri;
+		}
+
+		return uris;
+
 	}	
 	
 	// Main just for testing purposes
