@@ -127,18 +127,10 @@ public class Discovery {
 	 * 
 	 */
 	public URI[] knownUrisOf(String serviceName) {
-		Set<URI> s = servers.get(serviceName);
-		Iterator<URI> it = s.iterator();
-		URI[] uris = new URI[s.size()];
-		int counter = 0;
-
-		while (it.hasNext()) {
-			URI uri = it.next();
-			uris[counter++] = uri;
-		}
-
+		Set<URI> uriSet = servers.get(serviceName);
+		URI[] uris = new URI[uriSet.size()];
+		uriSet.toArray(uris);
 		return uris;
-
 	}	
 	
 	// Main just for testing purposes
